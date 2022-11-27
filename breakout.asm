@@ -91,6 +91,9 @@ game_loop:
 	# 3. Draw the screen
 	# 4. Sleep
     jal handle_input
+    jal move_ball
+
+
     jal draw_walls
     jal draw_paddle
     jal init_bricks
@@ -414,8 +417,9 @@ handle_input:
     bne $t1, 1, handle_input_epi	# If first word 1, key is pressed
 
     lw $t2, 4($t0)  # $t2 = keycode
-    beq $t2, 97, move_paddle_left
-    beq $t2, 100, move_paddle_right
+    beq $t2, 97, move_paddle_left	# a
+    beq $t2, 100, move_paddle_right	# d
+    beq $t2, 113, quit	# q
     
     j handle_input_epi
 
@@ -427,6 +431,8 @@ move_paddle_right:
     li $a0, 1
     jal move_paddle
     j handle_input_epi
+quit:
+    jal quit_game
 
 handle_input_epi:
     # EPILOGUE
@@ -434,7 +440,9 @@ handle_input_epi:
     addi $sp, $sp, 4
     jr $ra
     
-
+quit_game:
+    li $v0, 10                      # Quit gracefully
+    syscall
 
 # move_paddle(dir) -> void
 #   Move the paddle direction depending on dir
@@ -458,4 +466,20 @@ move_paddle:
 
     # EPILOGUE
     jr $ra
-    
+
+move_ball:
+    # BODY
+    la $t0, ball	# get ball address
+    lw $t1, 0($t0)	# x
+    lw $t2, 4($t0)	# y
+    lw $t3, 12($t0)	# x_velocity
+    lw $t4, 16($t0)	# y_velocty
+    add $t1, $t1, $t3	# x = x + x_velocity
+    add $t2, $t2, $t4	# y = y + y_velocity
+
+    sw $t1, 0($t0)
+    sw $t2, 4($t0)
+
+    # EPILOGUE
+    jr $ra
+
