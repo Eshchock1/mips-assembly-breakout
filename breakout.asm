@@ -20,7 +20,7 @@
 .eqv blue   	0x525afa
 .eqv orange	0xfc8e49
 .eqv yellow	0xeded42
-.eqv white  	0x000000
+.eqv white  	0xffffff
 .eqv grey   	0x8e8e8e 
 
 
@@ -44,10 +44,11 @@ ball_size:	.word 1
 # Mutable Data
 ##############################################################################
 ball:
-    .word   5	# x_loc
-    .word   5	# y_loc
-    .word   0	# x_vel
-    .word   -1	# y_vel
+    .word   32 	    # x_loc
+    .word   25	    # y_loc
+    .word   white   # ball_color 
+    .word   0	    # x_vel
+    .word   -1	    # y_vel
 paddle:
     .word   30	# x_loc
     .word   30	# y_loc
@@ -62,11 +63,6 @@ brick:
 brick_array:
     .space  4	    # ending address
     .space  1000    # don't know what this should be
-
-brick_colors:
-    .word   red
-    .word   green
-    .word   blue
 
 ##############################################################################
 # Code
@@ -85,6 +81,7 @@ main:
     jal draw_walls
     jal draw_paddle
     jal init_bricks
+    jal draw_ball
 
     
 end:    
@@ -273,7 +270,7 @@ init_brick_line_epi:
     lw $s2, 12($sp)
     lw $s1, 16($sp)
     lw $s0, 20($sp)
-    addi $sp, $sp, 20
+    addi $sp, $sp, 24
     jr $ra
 
 # init_bricks() -> void
@@ -319,9 +316,6 @@ init_bricks:
     addi $sp, $sp, 4
     jr $ra
     
-
-
-
 # draw_paddle() -> void
 draw_paddle:
     # PROLOGUE
@@ -346,4 +340,30 @@ draw_paddle_epi:
     lw $ra, 0($sp)
     addi $sp, $sp, 4
     jr $ra
+
+
+draw_ball:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    la $t0, ball # get the address of ball object
+
+    lw $a0, 0($t0)	# x
+    lw $a1, 4($t0)	# y
+    li $a2, 1		# width 
+    li $a3, 1		# height 
+
+    lw $t1, 8($t0)	# get color of ball
+    addi $sp, $sp, -4
+    sw $t1, 0($sp)	# load color onto stack
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+
     
