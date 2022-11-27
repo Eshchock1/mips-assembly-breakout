@@ -4,17 +4,17 @@
 # Student 1: Name, Student Number
 # Student 2: Name, Student Number
 ######################## Bitmap Display Configuration ########################
-# - Unit width in pixels:       8
-# - Unit height in pixels:      8
+# - Unit width in pixels:       4
+# - Unit height in pixels:      4
 # - Display width in pixels:    512
 # - Display height in pixels:   256
 # - Base Address for Display:   0x10008000 ($gp)
 ##############################################################################
 
 
-.eqv screen_width 128	# width in bitmap units
-.eqv screen_height 64	# height in bitmap units
-.eqv sleep_time 33	# set frame rate to ~30 FPS
+.eqv screen_width 256	# width in bitmap units
+.eqv screen_height 128	# height in bitmap units
+.eqv sleep_time 15	# set frame rate to ~60 FPS
 # .eqv paddle_color
 .eqv red	0xf05630
 .eqv green  	0x73ff73
@@ -28,10 +28,15 @@
 .eqv wall_thickness 6
 .eqv brick_width 6
 .eqv brick_height 2
-.eqv paddle_speed 2
-.eqv paddle_width 13 
+.eqv paddle_speed 4
+.eqv paddle_width 24
+.eqv paddle_height 3  
+.eqv ball_size 3
 
-    .data
+.data
+
+FRAMEBUFFER: 
+    .space 0x18000
 ##############################################################################
 # Immutable Data
 ##############################################################################
@@ -43,24 +48,25 @@ ADDR_KBRD:
     .word 0xffff0000
 
 # brick_width:	.word 2
-ball_size:	.word 1
+# ball_size:	.word 1
 
 
 ##############################################################################
 # Mutable Data
 ##############################################################################
 ball:
-    .word   32 	    # x_loc
-    .word   50	    # y_loc
+    .word   126 	    # x_loc
+    .word   100	    # y_loc
     .word   white   # ball_color 
     .word   0	    # x_vel
-    .word   -1	    # y_vel
+    .word   0	    # y_vel
+    .word   ball_size # ball_size
 paddle:
-    .word   60			# x_loc
-    .word   60			# y_loc
+    .word   116			# x_loc
+    .word   116			# y_loc
     .word   paddle_width	# paddle_width
     .word   red			# paddle_color    
-    .word   paddle_speed	# paddel_speed
+    .word   paddle_speed	# paddle_speed
 brick:
     .space  4	# x_loc   
     .space  4	# y_loc   
@@ -86,7 +92,7 @@ main:
     
 
 game_loop:
-	# 1a. Check if key has been pressed
+    # 1a. Check if key has been pressed
     # 1b. Check which key has been pressed
     # 2a. Check for collisions
 	# 2b. Update locations (paddle, ball)
@@ -215,7 +221,7 @@ draw_walls:
     li $a0, 1
     li $a1, 1
     li $a2, wall_thickness 
-    li $a3, 63 # screen_height - 1
+    li $a3, 127 # screen_height - 1
 
     addi $sp, $sp, -4
     li, $t0, grey
@@ -226,7 +232,7 @@ draw_walls:
     # top wall
     li $a0, 1
     li $a1, 1
-    li $a2, 126 # screen_width - 2
+    li $a2, 254 # screen_width - 2
     li $a3, wall_thickness 
 
     addi $sp, $sp, -4
@@ -236,10 +242,10 @@ draw_walls:
     jal draw_rect
 
     # right wall
-    li $a0, 121 # screen_width - 1 - wall_thickess
+    li $a0, 249 # screen_width - 1 - wall_thickess
     li $a1, 1
     li $a2, wall_thickness 
-    li $a3, 63 # screen_height - 1
+    li $a3, 127 # screen_height - 1
 
     addi $sp, $sp, -4
     li, $t0, grey
@@ -359,7 +365,7 @@ draw_paddle:
     lw $a0, 0($t0)  # x
     lw $a1, 4($t0)  # y
     lw $a2, 8($t0)  # width
-    li $a3, 1	    # height
+    li $a3, paddle_height	    # height
     lw $t4, 12($t0) # color
     addi $sp, $sp, -4
     sw $t4, 0($sp)  # push color onto stack
@@ -383,8 +389,8 @@ draw_ball:
 
     lw $a0, 0($t0)	# x
     lw $a1, 4($t0)	# y
-    li $a2, 1		# width 
-    li $a3, 1		# height 
+    li $a2, ball_size		# width 
+    li $a3, ball_size		# height 
 
     lw $t1, 8($t0)	# get color of ball
     addi $sp, $sp, -4
@@ -472,16 +478,32 @@ move_paddle:
     mult $a0, $t2
     mflo $t3		# x delta
     add $t1, $t1, $t3	# calculate new x
-
+    
+    ble $t1, 7, handle_paddle_left_collision
+    bge $t1, 225, handle_paddle_right_collision
+    
     sw $t1, 0($t0)	# update x position of paddle
+    b move_paddle_epi
 
+
+move_paddle_epi:
     move $a0, $t1
     li $v0, 1
     syscall
 
     # EPILOGUE
     jr $ra
+    
+handle_paddle_left_collision: 
+    addi $t4, $0, 7
+    sw $t4, 0($t0)
+    b move_paddle_epi
 
+handle_paddle_right_collision: 
+    addi $t4, $0, 225
+    sw $t4, 0($t0)
+    b move_paddle_epi
+    
 move_ball:
     # BODY
     la $t0, ball	# get ball address
