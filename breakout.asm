@@ -12,8 +12,9 @@
 ##############################################################################
 
 
+.eqv sleep_time 60 # ~15 FPS
 .eqv brick_width 2
-# .eqv paddle_width 2
+.eqv paddle_speed 2
 # .eqv paddle_color
 .eqv red	0xf05630
 .eqv green  	0x73ff73
@@ -22,7 +23,7 @@
 .eqv yellow	0xeded42
 .eqv white  	0xffffff
 .eqv grey   	0x8e8e8e 
-
+.eqv black	0x000000
 
 
     .data
@@ -50,10 +51,11 @@ ball:
     .word   0	    # x_vel
     .word   -1	    # y_vel
 paddle:
-    .word   30	# x_loc
-    .word   30	# y_loc
-    .word   5	# paddle_width
-    .word   red	# paddle_color    
+    .word   30			# x_loc
+    .word   30			# y_loc
+    .word   5			# paddle_width
+    .word   red			# paddle_color    
+    .word   paddle_speed	# paddel_speed
 brick:
     .space  4	# x_loc   
     .space  4	# y_loc   
@@ -78,15 +80,8 @@ main:
     # li $a1, 29
     # jal draw_paddle
     
-    jal draw_walls
-    jal draw_paddle
-    jal init_bricks
-    jal draw_ball
 
     
-end:    
-    li $v0, 10
-    syscall
 
 game_loop:
 	# 1a. Check if key has been pressed
@@ -95,9 +90,27 @@ game_loop:
 	# 2b. Update locations (paddle, ball)
 	# 3. Draw the screen
 	# 4. Sleep
+    jal handle_input
+    jal draw_walls
+    jal draw_paddle
+    jal init_bricks
+    jal draw_ball
+   
+    
+    
+    # sleep
+    li $a0, sleep_time
+    li $v0, 32
+    syscall
+
+    jal erase_screen
 
     #5. Go back to 1
     b game_loop
+
+end:    
+    li $v0, 10
+    syscall
 
 # get_location_address(x, y) -> address
 #   Return the address of the unit on the display at location (x,y)
@@ -179,10 +192,10 @@ draw_walls:
     # BODY
     
     # left wall
-    li $a0, 0
-    li $a1, 0
-    li $a2, 3
-    li $a3, 32
+    li $a0, 1
+    li $a1, 1
+    li $a2, 2
+    li $a3, 31
 
     addi $sp, $sp, -4
     li, $t0, grey
@@ -191,10 +204,10 @@ draw_walls:
     jal draw_rect
     
     # top wall
-    li $a0, 0
-    li $a1, 0
-    li $a2, 64 
-    li $a3, 3
+    li $a0, 1
+    li $a1, 1
+    li $a2, 62 
+    li $a3, 2 
 
     addi $sp, $sp, -4
     li, $t0, grey
@@ -204,9 +217,9 @@ draw_walls:
     
     # right wall
     li $a0, 61
-    li $a1, 0
-    li $a2, 3 
-    li $a3, 32 
+    li $a1, 1
+    li $a2, 2 
+    li $a3, 31 
 
     addi $sp, $sp, -4
     li, $t0, grey
@@ -365,5 +378,84 @@ draw_ball:
     addi $sp, $sp, 4
     jr $ra
 
+# erase_screen() -> void
+erase_screen:
+    # PROLOGUE
+    addi $sp, $sp, -4 
+    sw $ra, 0($sp)
+    
+    # BODY
+    li $a0, 0
+    li $a1, 0
+    li $a2, 64
+    li $a3, 32
+    li $t0, black
+    addi $sp, $sp, -4
+    sw $t0, 0($sp)
 
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+    
+
+
+# handle_input() -> void
+handle_input:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    lw $t0, ADDR_KBRD			# $t0 = base address for keyboard
+    lw $t1, 0($t0)			# Load first word from keyboard
+    bne $t1, 1, handle_input_epi	# If first word 1, key is pressed
+
+    lw $t2, 4($t0)  # $t2 = keycode
+    beq $t2, 97, move_paddle_left
+    beq $t2, 100, move_paddle_right
+    
+    j handle_input_epi
+
+move_paddle_left:
+    li $a0, -1
+    jal move_paddle
+    j handle_input_epi
+move_paddle_right:
+    li $a0, 1
+    jal move_paddle
+    j handle_input_epi
+
+handle_input_epi:
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+    
+
+
+# move_paddle(dir) -> void
+#   Move the paddle direction depending on dir
+#	- dir = -1 => move left
+#	- dir = 1 => move right
+move_paddle:
+    # BODY
+
+    la $t0, paddle
+    lw $t1, 0($t0)	# x
+    lw $t2, 16($t0)	# speed
+    mult $a0, $t2
+    mflo $t3		# x delta
+    add $t1, $t1, $t3	# calculate new x
+
+    sw $t1, 0($t0)	# update x position of paddle
+
+    move $a0, $t1
+    li $v0, 1
+    syscall
+
+    # EPILOGUE
+    jr $ra
     
