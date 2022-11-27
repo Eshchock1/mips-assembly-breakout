@@ -12,9 +12,9 @@
 ##############################################################################
 
 
-.eqv sleep_time 60 # ~15 FPS
-.eqv brick_width 2
-.eqv paddle_speed 2
+.eqv screen_width 128	# width in bitmap units
+.eqv screen_height 64	# height in bitmap units
+.eqv sleep_time 33	# set frame rate to ~30 FPS
 # .eqv paddle_color
 .eqv red	0xf05630
 .eqv green  	0x73ff73
@@ -25,6 +25,11 @@
 .eqv grey   	0x8e8e8e 
 .eqv black	0x000000
 
+.eqv wall_thickness 6
+.eqv brick_width 6
+.eqv brick_height 2
+.eqv paddle_speed 2
+.eqv paddle_width 13 
 
     .data
 ##############################################################################
@@ -46,14 +51,14 @@ ball_size:	.word 1
 ##############################################################################
 ball:
     .word   32 	    # x_loc
-    .word   25	    # y_loc
+    .word   50	    # y_loc
     .word   white   # ball_color 
     .word   0	    # x_vel
     .word   -1	    # y_vel
 paddle:
-    .word   30			# x_loc
-    .word   30			# y_loc
-    .word   5			# paddle_width
+    .word   60			# x_loc
+    .word   60			# y_loc
+    .word   paddle_width	# paddle_width
     .word   red			# paddle_color    
     .word   paddle_speed	# paddel_speed
 brick:
@@ -76,9 +81,6 @@ brick_array:
 main:
     # Initialize the game
     
-    # li $a0, 32
-    # li $a1, 29
-    # jal draw_paddle
     
 
     
@@ -90,14 +92,15 @@ game_loop:
 	# 2b. Update locations (paddle, ball)
 	# 3. Draw the screen
 	# 4. Sleep
+
     jal handle_input
     jal move_ball
 
 
-    jal draw_walls
-    jal draw_paddle
     jal init_bricks
+    jal draw_paddle
     jal draw_ball
+    jal draw_walls
    
     
     
@@ -119,65 +122,60 @@ end:
 #   Return the address of the unit on the display at location (x,y)
 #
 #   Preconditions:
-#       - x is between 0 and 63, inclusive
-#       - y is between 0 and 31, inclusive
 get_location_address:
     # BODY
-    sll $a0, $a0, 2	# x = x * 4
-    sll $a1, $a1, 8	# y = y * 256
+
+    sll $t0, $a0, 2 # t0 = a0 * 4 (x_bytes)
+
+    # t1 = a1 * screen_width * 4 (y_bytes)
+    li $t2, screen_width
+    sll $t1, $a1, 2
+    mult $t1, $t2
+    mflo $t1
 
     lw $v0, ADDR_DSPL	
-    add $v0, $v0, $a0
-    add $v0, $v0, $a1	# address = address + x + y
+    add $v0, $v0, $t0
+    add $v0, $v0, $t1	# address = initial address + x_bytes + y_bytes
 
     # EPILOGUE
     jr $ra
 
 # draw_rect(x, y, width, height, color) -> void
 draw_rect:
-    # PROLOGUE
-    lw $t4, 0($sp) # obtain the color through the stack
+    # obtain the color through the stack
+    lw $t4, 0($sp) 
     addi $sp, $sp, 4
-
-    # create copies of width, height 
-    move $t2, $a2 # width
-    move $t3, $a3 # height
-
-    addi $sp, $sp, -16
-    sw $t2, 12($sp)
-    sw $t3, 8($sp)
-    sw $t4, 4($sp)
+    # PROLOGUE
+    addi $sp, $sp, -24
+    sw $s0, 20($sp)
+    sw $s1, 16($sp)
+    sw $s2, 12($sp)
+    sw $s3, 8($sp)
+    sw $s4, 4($sp)
     sw $ra, 0($sp)
 
-    # get_location address for (x,y)
-    jal get_location_address
-    # v0 now has the address for (x, y)
-
-    lw $ra, 0($sp)
-    lw $t4, 4($sp)
-    lw $t3, 8($sp)
-    lw $t2, 12($sp)
-    addi $sp, $sp, 16
+    # create copies of x, y, width, height and color
+    move $s0, $a0 # x
+    move $s1, $a1 # y
+    move $s2, $a2 # width
+    move $s3, $a3 # height
+    move $s4, $t4 # color
 
     li $t5, 0	# i = 0
 draw_rect_loop1:
-    beq $t5, $t3, draw_rect_epi
+    beq $t5, $s3, draw_rect_epi
 
     li $t6, 0	# j = 0
 draw_rect_loop2:
-    beq $t6, $t2, draw_rect_loop2_end
+    beq $t6, $s2, draw_rect_loop2_end
 	
 	# calculate address of the point (x + j, y + i)
-	move $t7, $t6
-	move $t8, $t5
-	
-	sll $t7, $t7, 2 # x_bytes
-	sll $t8, $t8, 8 # y_bytes
+	add $a0, $s0, $t6
+	add $a1, $s1, $t5
 
-	add $t9, $v0, $t7
-	add $t9, $t9, $t8
+	jal get_location_address # v0 is now has the address for (x + j, y + i)
 
-	sw $t4, 0($t9)
+	sw $s4, 0($v0) # paint the pixel the correct color!
 
     addi $t6, $t6, 1
     j draw_rect_loop2
@@ -186,6 +184,13 @@ draw_rect_loop2_end:
     j draw_rect_loop1
 draw_rect_epi:
     # EPILOGUE     
+    lw $ra, 0($sp)
+    lw $s4, 4($sp)
+    lw $s3, 8($sp)
+    lw $s2, 12($sp)
+    lw $s1, 16($sp)
+    lw $s0, 20($sp)
+    addi $sp, $sp, 24
     jr $ra
 
 draw_walls:
@@ -193,43 +198,54 @@ draw_walls:
     addi $sp, $sp, -4
     sw $ra, 0($sp)
     # BODY
+
+    # corner
+    # li $a0, 10 
+    # li $a1, 60 
+    # li $a2, 1
+    # li $a3, 1
+    #
+    # addi $sp, $sp, -4
+    # li, $t0, grey
+    # sw $t0, 0($sp)
+    #
+    # jal draw_rect
     
     # left wall
     li $a0, 1
     li $a1, 1
-    li $a2, 2
-    li $a3, 31
+    li $a2, wall_thickness 
+    li $a3, 63 # screen_height - 1
 
     addi $sp, $sp, -4
     li, $t0, grey
     sw $t0, 0($sp)
 
     jal draw_rect
-    
+
     # top wall
     li $a0, 1
     li $a1, 1
-    li $a2, 62 
-    li $a3, 2 
+    li $a2, 126 # screen_width - 2
+    li $a3, wall_thickness 
 
     addi $sp, $sp, -4
     li, $t0, grey
     sw $t0, 0($sp)
 
     jal draw_rect
-    
+
     # right wall
-    li $a0, 61
+    li $a0, 121 # screen_width - 1 - wall_thickess
     li $a1, 1
-    li $a2, 2 
-    li $a3, 31 
+    li $a2, wall_thickness 
+    li $a3, 63 # screen_height - 1
 
     addi $sp, $sp, -4
     li, $t0, grey
     sw $t0, 0($sp)
 
     jal draw_rect
-
 
     # EPILOGUE
     lw $ra, 0($sp)
@@ -265,7 +281,7 @@ init_brick_line_loop:
 	move $a0, $s0
 	move $a1, $s1
 	li $a2, brick_width
-	li $a3, 1
+	li $a3, brick_height 
 	addi $sp, $sp, -4
 	sw $s3, 0($sp)
 
@@ -296,34 +312,33 @@ init_bricks:
     sw $ra, 0($sp)
     # BODY
     
-    li $a0, 3 
-    li $a1, 6
-    li $a2, 29
+    li $a0, 7 
+    li $a1, 15 
+    li $a2, 19 
     li $a3, red
     jal init_brick_line
 
-    li $a0, 3 
-    li $a1, 7
-    li $a2, 29
+    li $a0, 7 
+    li $a1, 17 
+    li $a2, 19 
     li $a3, orange
     jal init_brick_line
 
-    li $a0, 3 
-    li $a1, 8
-    li $a2, 29
+    li $a0, 7 
+    li $a1, 19 
+    li $a2, 19 
     li $a3, yellow
     jal init_brick_line
 
-
-    li $a0, 3 
-    li $a1, 9
-    li $a2, 29
+    li $a0, 7 
+    li $a1, 21 
+    li $a2, 19 
     li $a3, green
     jal init_brick_line
 
-    li $a0, 3 
-    li $a1, 10  
-    li $a2, 29
+    li $a0, 7 
+    li $a1, 23 
+    li $a2, 19 
     li $a3, blue
     jal init_brick_line
 
@@ -390,8 +405,8 @@ erase_screen:
     # BODY
     li $a0, 0
     li $a1, 0
-    li $a2, 64
-    li $a3, 32
+    li $a2, screen_width
+    li $a3, screen_height
     li $t0, black
     addi $sp, $sp, -4
     sw $t0, 0($sp)
