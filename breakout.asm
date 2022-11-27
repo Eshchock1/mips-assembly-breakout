@@ -12,15 +12,17 @@
 ##############################################################################
 
 
-# .eqv brick_width 2
+.eqv brick_width 2
 # .eqv paddle_width 2
 # .eqv paddle_color
-.eqv display_width  64
-.eqv display_height 32
-.eqv red    0xf05630
-.eqv green  0x00ff00
-.eqv blue   0x0000ff
-.eqv grey   0x8e8e8e 
+.eqv red	0xf05630
+.eqv green  	0x73ff73
+.eqv blue   	0x525afa
+.eqv orange	0xfc8e49
+.eqv yellow	0xeded42
+.eqv white  	0x000000
+.eqv grey   	0x8e8e8e 
+
 
 
     .data
@@ -34,12 +36,8 @@ ADDR_DSPL:
 ADDR_KBRD:
     .word 0xffff0000
 
-brick_width:	.word 2
+# brick_width:	.word 2
 ball_size:	.word 1
-brick_colors:
-    .word   red
-    .word   green
-    .word   blue
 
 
 ##############################################################################
@@ -55,6 +53,20 @@ paddle:
     .word   30	# y_loc
     .word   5	# paddle_width
     .word   red	# paddle_color    
+brick:
+    .space  4	# x_loc   
+    .space  4	# y_loc   
+    .space  4	# color
+    .word   0	# is_dead  
+
+brick_array:
+    .space  4	    # ending address
+    .space  1000    # don't know what this should be
+
+brick_colors:
+    .word   red
+    .word   green
+    .word   blue
 
 ##############################################################################
 # Code
@@ -72,6 +84,7 @@ main:
     
     jal draw_walls
     jal draw_paddle
+    jal init_bricks
 
     
 end:    
@@ -211,15 +224,103 @@ draw_walls:
     jr $ra
 
 
-# draw_brick(startAddress, color) -> void
-draw_brick:
-    # bruh what
-    lw $t0, 0($sp) # color
-    addi $sp, $sp, 4
-    lw $t1, 0($sp) # start address
-    addi $sp, $sp, 4
+# init_brick_line(x, y, num_bricks, color) -> void
+# TODO: MAKE THIS UPDATE THE BRICK_ARRAY
+init_brick_line:
+    # PROLOGUE
+    addi $sp, $sp, -24
+    sw $s0, 20($sp)
+    sw $s1, 16($sp)
+    sw $s2, 12($sp)
+    sw $s3, 8($sp)
+    sw $s4, 4($sp)
+    sw $ra, 0($sp)
 
-    sw $t0, 0($t1)
+    # BODY
+    
+    # create copies of function arguments
+    move $s0, $a0   # x
+    move $s1, $a1   # y
+    move $s2, $a2   # num_bricks
+    move $s3, $a3   # color
+
+    move $s4, $zero # i = 0
+
+init_brick_line_loop:
+    beq $s4, $s2, init_brick_line_epi
+
+	move $a0, $s0
+	move $a1, $s1
+	li $a2, brick_width
+	li $a3, 1
+	addi $sp, $sp, -4
+	sw $s3, 0($sp)
+
+	mult $a2, $s4	    # calculate x offset
+	mflo $t0
+	add $a0, $a0, $t0   # add offset to x
+
+	jal draw_rect
+
+    addi $s4, $s4, 1
+    j init_brick_line_loop
+    
+init_brick_line_epi:
+    # EPILOGUE
+    lw $ra, 0($sp)
+    lw $s4, 4($sp)
+    lw $s3, 8($sp)
+    lw $s2, 12($sp)
+    lw $s1, 16($sp)
+    lw $s0, 20($sp)
+    addi $sp, $sp, 20
+    jr $ra
+
+# init_bricks() -> void
+init_bricks:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+    # BODY
+    
+    li $a0, 3 
+    li $a1, 6
+    li $a2, 29
+    li $a3, red
+    jal init_brick_line
+
+    li $a0, 3 
+    li $a1, 7
+    li $a2, 29
+    li $a3, orange
+    jal init_brick_line
+
+    li $a0, 3 
+    li $a1, 8
+    li $a2, 29
+    li $a3, yellow
+    jal init_brick_line
+
+
+    li $a0, 3 
+    li $a1, 9
+    li $a2, 29
+    li $a3, green
+    jal init_brick_line
+
+    li $a0, 3 
+    li $a1, 10  
+    li $a2, 29
+    li $a3, blue
+    jal init_brick_line
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+    
+
+
 
 # draw_paddle() -> void
 draw_paddle:
