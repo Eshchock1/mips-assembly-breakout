@@ -26,9 +26,11 @@
 .eqv black	0x000000
 
 .eqv wall_thickness 6
-.eqv brick_width 6
-.eqv brick_height 2
-.eqv paddle_speed 4
+.eqv brick_width 20
+.eqv brick_height 3
+.eqv brick_gap 2
+.eqv bricks_per_line 11
+.eqv paddle_speed 8
 .eqv paddle_width 24
 .eqv paddle_height 3  
 .eqv ball_size 3
@@ -67,16 +69,17 @@ paddle:
     .word   paddle_width	# paddle_width
     .word   red			# paddle_color    
     .word   paddle_speed	# paddle_speed
-brick:
-    .space  4	# x_loc   
-    .space  4	# y_loc   
-    .space  4	# color
-    .word   0	# is_dead  
+# brick:
+    #.space  4	# x_loc   
+    #.space  4	# y_loc   
+    #.space  4	# color
+    #.word   0	# is_dead  
 
 brick_array:
     .space  4	    # ending address
     .space  1000    # don't know what this should be
 
+    
 ##############################################################################
 # Code
 ##############################################################################
@@ -86,7 +89,7 @@ brick_array:
 	# Run the Brick Breaker game.
 main:
     # Initialize the game
-    
+    jal init_bricks
     
 
     
@@ -103,7 +106,8 @@ game_loop:
     jal move_ball
 
 
-    jal init_bricks
+
+    jal draw_bricks
     jal draw_paddle
     jal draw_ball
     jal draw_walls
@@ -259,56 +263,38 @@ draw_walls:
     jr $ra
 
 
-# init_brick_line(x, y, num_bricks, color) -> void
+# init_brick_line(y, brick_row, color) -> void
 # TODO: MAKE THIS UPDATE THE BRICK_ARRAY
 init_brick_line:
-    # PROLOGUE
-    addi $sp, $sp, -24
-    sw $s0, 20($sp)
-    sw $s1, 16($sp)
-    sw $s2, 12($sp)
-    sw $s3, 8($sp)
-    sw $s4, 4($sp)
-    sw $ra, 0($sp)
-
     # BODY
-    
-    # create copies of function arguments
-    move $s0, $a0   # x
-    move $s1, $a1   # y
-    move $s2, $a2   # num_bricks
-    move $s3, $a3   # color
-
-    move $s4, $zero # i = 0
-
+    li $t0, 8    # x
+    li $t1, 0    # i = 0
+    la $t2, brick_array  # load brick array
+    addi $t2, $t2, 4  # add 4 to skip the space
+    li $t3, bricks_per_line  # load bricks per line
+    mult $a1, $t3  # multiply brick row number by bricks per line
+    mflo $t3 # store result in t3
+    sll $t3, $t3, 4  # multiply by 4 x 4 for brick
+    add $t2, $t2, $t3  # add it to brick array address to get the starting address
+	
 init_brick_line_loop:
-    beq $s4, $s2, init_brick_line_epi
-
-	move $a0, $s0
-	move $a1, $s1
-	li $a2, brick_width
-	li $a3, brick_height 
-	addi $sp, $sp, -4
-	sw $s3, 0($sp)
-
-	mult $a2, $s4	    # calculate x offset
-	mflo $t0
-	add $a0, $a0, $t0   # add offset to x
-
-	jal draw_rect
-
-    addi $s4, $s4, 1
-    j init_brick_line_loop
+    li $t4, bricks_per_line
+    beq $t1, $t4, init_brick_line_epi # exit when i = bricks per line
+    sw $t0, 0($t2)  # store the x value
+    addi $t0, $t0, brick_width
+    addi $t0, $t0, brick_gap # update x value
+    addi $t2, $t2, 4
+    sw $a0, 0($t2)  # store the y value
+    addi $t2, $t2, 4
+    sw $a2, 0($t2)  # store the color 
+    addi $t2, $t2, 4
+    sw $0, 0($t2)  # store isDead
+    addi $t2, $t2, 4
+    addi $t1, $t1, 1  # increase t1
+    b init_brick_line_loop
     
 init_brick_line_epi:
     # EPILOGUE
-    lw $ra, 0($sp)
-    lw $s4, 4($sp)
-    lw $s3, 8($sp)
-    lw $s2, 12($sp)
-    lw $s1, 16($sp)
-    lw $s0, 20($sp)
-    addi $sp, $sp, 24
     jr $ra
 
 # init_bricks() -> void
@@ -318,41 +304,84 @@ init_bricks:
     sw $ra, 0($sp)
     # BODY
     
-    li $a0, 7 
-    li $a1, 15 
-    li $a2, 19 
-    li $a3, red
+    la $t0, brick_array
+    li $t1, 5
+    li $t2, bricks_per_line
+    
+    mult $t1, $t2
+    mflo $t3
+    sw $t3, 0($t0)
+    
+    li $a0, 10 
+    li $a1, 0 
+    li $a2, red
     jal init_brick_line
-
-    li $a0, 7 
-    li $a1, 17 
-    li $a2, 19 
-    li $a3, orange
+    
+    li $a0, 15 
+    li $a1, 1 
+    li $a2, orange
     jal init_brick_line
-
-    li $a0, 7 
-    li $a1, 19 
-    li $a2, 19 
-    li $a3, yellow
+    
+    li $a0, 20 
+    li $a1, 2 
+    li $a2, yellow
     jal init_brick_line
-
-    li $a0, 7 
-    li $a1, 21 
-    li $a2, 19 
-    li $a3, green
+    
+    li $a0, 25 
+    li $a1, 3 
+    li $a2, green
     jal init_brick_line
-
-    li $a0, 7 
-    li $a1, 23 
-    li $a2, 19 
-    li $a3, blue
+    
+    li $a0, 30 
+    li $a1, 4 
+    li $a2, blue
     jal init_brick_line
-
+    
     # EPILOGUE
     lw $ra, 0($sp)
     addi $sp, $sp, 4
     jr $ra
     
+draw_bricks:
+    # PROLOGUE
+    addi $sp, $sp, -16
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $s2, 8($sp)
+    sw $ra, 12($sp)
+
+        
+    # BODY
+    la $s0, brick_array  # store brick array address
+    lw $s1, 0($s0)  # store the number of bricks in brick_array
+    li $s2, 0  # i = 0
+    addi $s0, $s0, 4
+
+draw_brick_loop:
+    beq $s1, $s2, draw_brick_epi  # exit when i == number of bricks
+    lw $a0, 0($s0)  # load the x coord
+    addi $s0, $s0, 4 
+    lw $a1, 0($s0)  # load the y value
+    addi $s0, $s0, 4
+    li $a2, brick_width  # store rect width
+    li $a3, brick_height  # store rect height
+    lw $t3, 0($s0)  # load color
+    addi $s0, $s0, 8 
+    addi $sp, $sp, -4
+    sw $t3, 0($sp)  # push color onto stack
+    jal draw_rect
+    addi $s2, $s2, 1  # increment i
+    b draw_brick_loop 
+    
+draw_brick_epi:
+    # EPILOGUE
+    lw $s0, 0($sp)
+    lw $s1, 4($sp)
+    lw $s2, 8($sp)
+    lw $ra, 12($sp)
+    addi $sp, $sp, 16
+    jr $ra
+
 # draw_paddle() -> void
 draw_paddle:
     # PROLOGUE
@@ -360,7 +389,6 @@ draw_paddle:
     sw $ra, 0($sp)
 
     # BODY
-    
     la $t0, paddle  # get address of paddle obj
     lw $a0, 0($t0)  # x
     lw $a1, 4($t0)  # y
@@ -484,15 +512,6 @@ move_paddle:
     
     sw $t1, 0($t0)	# update x position of paddle
     b move_paddle_epi
-
-
-move_paddle_epi:
-    move $a0, $t1
-    li $v0, 1
-    syscall
-
-    # EPILOGUE
-    jr $ra
     
 handle_paddle_left_collision: 
     addi $t4, $0, 7
@@ -504,6 +523,14 @@ handle_paddle_right_collision:
     sw $t4, 0($t0)
     b move_paddle_epi
     
+move_paddle_epi:
+    move $a0, $t1
+    li $v0, 1
+    syscall
+
+    # EPILOGUE
+    jr $ra
+
 move_ball:
     # BODY
     la $t0, ball	# get ball address
