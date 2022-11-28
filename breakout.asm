@@ -60,8 +60,8 @@ ball:
     .word   126 	    # x_loc
     .word   100	    # y_loc
     .word   white   # ball_color 
-    .word   0	    # x_vel
-    .word   0	    # y_vel
+    .word   6	    # x_vel
+    .word   -3	    # y_vel
     .word   ball_size # ball_size
 paddle:
     .word   116			# x_loc
@@ -541,9 +541,39 @@ move_ball:
     add $t1, $t1, $t3	# x = x + x_velocity
     add $t2, $t2, $t4	# y = y + y_velocity
 
+    ble $t1, 7, handle_ball_left_wall_collision
+    bge $t1, 246, handle_ball_right_wall_collision
+    ble $t2, 7, handle_ball_top_wall_collision
+   
     sw $t1, 0($t0)
     sw $t2, 4($t0)
+    
+    b move_ball_epi
 
+handle_ball_left_wall_collision:
+    sub $t3, $0, $t3
+    li $t5, 7
+    sw $t5, 0($t0)
+    sw $t2, 4($t0)
+    sw $t3, 12($t0)
+    b move_ball_epi
+    
+handle_ball_right_wall_collision:
+    sub $t3, $0, $t3
+    li $t5, 246
+    sw $t5, 0($t0)
+    sw $t2, 4($t0)
+    sw $t3, 12($t0)
+    b move_ball_epi
+    
+handle_ball_top_wall_collision:
+    sub $t4, $0, $t4 
+    li $t5, 7
+    sw $t1, 0($t0)
+    sw $t5, 4($t0)
+    sw $t4, 16($t0)
+    b move_ball_epi
+
+move_ball_epi:
     # EPILOGUE
     jr $ra
-
