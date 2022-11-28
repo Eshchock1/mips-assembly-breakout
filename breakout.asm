@@ -38,7 +38,7 @@
 .data
 
 FRAMEBUFFER: 
-    .space 0x18000
+    .space 0x20000
 ##############################################################################
 # Immutable Data
 ##############################################################################
@@ -112,7 +112,10 @@ game_loop:
     jal draw_ball
     jal draw_walls
    
-    
+    # Tell the display to update
+    lw   $t8, ADDR_DSPL
+    li   $t9, 1
+    sw   $t9, 0($t8) 
     
     # sleep
     li $a0, sleep_time
