@@ -60,8 +60,8 @@ ball:
     .word   126 	    # x_loc
     .word   100	    # y_loc
     .word   white   # ball_color 
-    .word   6	    # x_vel
-    .word   -3	    # y_vel
+    .word   2	    # x_vel
+    .word   -2	    # y_vel
     .word   ball_size # ball_size
 paddle:
     .word   116			# x_loc
@@ -90,9 +90,6 @@ brick_array:
 main:
     # Initialize the game
     jal init_bricks
-    
-
-    
 
 game_loop:
     # 1a. Check if key has been pressed
@@ -532,48 +529,255 @@ move_paddle_epi:
     jr $ra
 
 move_ball:
+    # PROLOGUE
+    addi $sp, $sp, -24
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $s2, 8($sp)
+    sw $s3, 12($sp)
+    sw $s4, 16($sp)
+    sw $ra, 20($sp)
+
     # BODY
-    la $t0, ball	# get ball address
-    lw $t1, 0($t0)	# x
-    lw $t2, 4($t0)	# y
-    lw $t3, 12($t0)	# x_velocity
-    lw $t4, 16($t0)	# y_velocty
-    add $t1, $t1, $t3	# x = x + x_velocity
-    add $t2, $t2, $t4	# y = y + y_velocity
+    la $s0, ball	# get ball address
+    lw $t1, 0($s0)	# x
+    lw $t2, 4($s0)	# y
+    lw $t3, 12($s0)	# x_velocity
+    lw $t4, 16($s0)	# y_velocty
+    add $s1, $t1, $t3	# x = x + x_velocity
+    add $s2, $t2, $t4	# y = y + y_velocity
 
     ble $t1, 7, handle_ball_left_wall_collision
     bge $t1, 246, handle_ball_right_wall_collision
     ble $t2, 7, handle_ball_top_wall_collision
-   
-    sw $t1, 0($t0)
-    sw $t2, 4($t0)
     
+    # (x_ball, y_ball, x_ball_vel, y_vall_vel, x_target, y_target, target_width, target_height) - collision_side, collision_reset_val
+    move $a0, $s1
+    move $a1, $s2
+    move $a2, $t3
+    move $a3, $t4
+    la $t0, paddle
+    lw $t1, 0($t0) # x loc
+    lw $t2, 4($t0) # y loc
+    lw $t3, 8($t0) # paddle width
+    li $t4, paddle_height
+    addi $sp, $sp, -16
+    sw $t1, 0($sp)
+    sw $t2, 4($sp)
+    sw $t3, 8($sp)
+    sw $t4, 12($sp)
+    jal handle_ball_rect_collision
+    
+    beq $v0, 1, handle_vert_ball_paddle_collision
+    beq $v0, 3, handle_vert_ball_paddle_collision
+    
+    sw $s1, 0($s0)
+    sw $s2, 4($s0)
+    
+    b move_ball_epi
+
+handle_vert_ball_paddle_collision:
+    lw $t4, 16($s0) # y vel
+    sub $t4, $0, $t4
+    sw $v1, 4($s0)  # store new y position
+    sw $t4, 16($s0)  # store new y vel
     b move_ball_epi
 
 handle_ball_left_wall_collision:
     sub $t3, $0, $t3
-    li $t5, 7
-    sw $t5, 0($t0)
-    sw $t2, 4($t0)
-    sw $t3, 12($t0)
+    li $t5, 8
+    sw $t5, 0($s0)
+    sw $t3, 12($s0)
     b move_ball_epi
     
 handle_ball_right_wall_collision:
     sub $t3, $0, $t3
-    li $t5, 246
-    sw $t5, 0($t0)
-    sw $t2, 4($t0)
-    sw $t3, 12($t0)
+    li $t5, 245
+    sw $t5, 0($s0)
+    sw $t3, 12($s0)
     b move_ball_epi
     
 handle_ball_top_wall_collision:
     sub $t4, $0, $t4 
-    li $t5, 7
-    sw $t1, 0($t0)
-    sw $t5, 4($t0)
-    sw $t4, 16($t0)
+    li $t5, 8
+    sw $t5, 4($s0)
+    sw $t4, 16($s0)
     b move_ball_epi
 
 move_ball_epi:
     # EPILOGUE
+    lw $s0, 0($sp)
+    lw $s1, 4($sp)
+    lw $s2, 8($sp)
+    lw $s3, 12($sp)
+    lw $s4, 16($sp)
+    lw $ra, 20($sp)
+    addi $sp, $sp, 24
+    jr $ra
+    
+# (x_ball, y_ball, x_ball_vel, y_vall_vel, x_target, y_target, target_width, target_height) - collision_side, collision_reset_val
+handle_ball_rect_collision:
+    lw $t0, 0($sp)  # target_x
+    lw $t1, 4($sp)  # target_y
+    lw $t2, 8($sp)  # target_width
+    add $t2, $t0, $t2  # target right edge
+    lw $t3, 12($sp)  # target_height
+    add $t3, $t1, $t3  # target bottom edge
+    addi $sp, $sp, 16
+    addi $sp, $sp, -36
+    sw $s0, 32($sp)
+    sw $s1, 28($sp)
+    sw $s2, 24($sp)
+    sw $s3, 20($sp)
+    sw $s4, 16($sp)
+    sw $s5, 12($sp)
+    sw $s6, 8($sp)
+    sw $s7, 4($sp)
+    sw $ra, 0($sp)
+    addi $sp, $sp, -8
+    sw $a2, 4($sp)  # store x_ball_vel
+    sw $a3, 0($sp)  # store y_ball_vel
+    
+    move $s0, $t0 # target left edge
+    move $s1, $t1 # target top edge
+    move $s2, $t2 # target right edge
+    move $s3, $t3 # target bottom edge
+    
+    move $s4, $a0  # ball left edge
+    move $s5, $a1  # ball top edge
+    addi $s6, $a0, ball_size  # ball right edge
+    addi $s7, $a1, ball_size  # ball bottom edge
+    
+    move $a0, $s2
+    move $a1, $s6
+    move $a2, $s0
+    move $a3, $s4
+    jal get_overlap
+    move $s4, $v0  # x overlap
+    
+    move $a0, $s3
+    move $a1, $s7
+    move $a2, $s1
+    move $a3, $s5
+    jal get_overlap
+    move $s5, $v0  # y overlap
+        
+    sgt $t0, $s4, 0  # 1 if overlap x
+    sgt $t1, $s5, 0  # 1 if overlap y
+    and $t3, $t0, $t1  # 1 if both overlap
+    
+    beq $t3, 0, no_collision  # if no collision
+    bge $s4, $s5, handle_y_collision  # if overlap x >= overlap y
+    b handle_x_collision  # if overlap x < overlap y
+
+no_collision:
+    addi $sp, $sp, 8
+    li $v0, 0  # no collision
+    li $v1, 0  # irrelevant
+    b handle_collision_epi
+  
+handle_y_collision:
+    lw $t0, 0($sp)  # get y_ball_vel
+    addi $sp, $sp, 8
+    bgt $t0, 0, handle_top_collision  # is y_ball_vel positive
+    b handle_bottom_collision
+
+handle_x_collision:
+    lw $t0, 4($sp)  # get x_ball_vel
+    addi $sp, $sp, 8
+    bgt $t0, 0, handle_left_collision  # is x_ball_vel positive
+    b handle_right_collision
+
+handle_top_collision:
+    li $v0, 1
+    subi $t0, $s1, 4
+    move $v1, $t0
+    b handle_collision_epi
+
+handle_bottom_collision:
+    li $v0, 3
+    addi $t0, $s3, 1
+    move $v1, $t0
+    b handle_collision_epi
+    
+handle_left_collision:
+    li $v0, 4
+    subi $t0, $s0, 4
+    move $v1, $t0
+    b handle_collision_epi
+
+handle_right_collision:
+    li $v0, 2
+    addi $t0, $s2, 1
+    move $v1, $t0
+    b handle_collision_epi
+
+#handle_ball_paddle_y_collision:
+ #   sub $t4, $0, $t4 
+  #  li $t5, 115
+   # sw $t1, 0($s0)
+   # sw $t5, 4($s0)
+   # sw $t4, 16($s0)
+   # li $v0, 1
+   # b move_ball_epi
+    
+#handle_ball_paddle_x_collision:
+ #   sub $t3, $0, $t3
+  #  li $t5, 115
+  #  sw $t1, 0($s0)
+  #  sw $t5, 4($s0)
+  #  sw $t3, 12($s0)
+  #  li $v0, 1
+  #  b move_ball_epi
+
+handle_collision_epi:
+    lw $s0, 32($sp)
+    lw $s1, 28($sp)
+    lw $s2, 24($sp)
+    lw $s3, 20($sp)
+    lw $s4, 16($sp)
+    lw $s5, 12($sp)
+    lw $s6, 8($sp)
+    lw $s7, 4($sp)
+    lw $ra, 0($sp)
+    addi $sp, $sp, 36
+    jr $ra
+
+# (Aright, Bright, Aleft, Bleft) -> overlap
+get_overlap:
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+    
+    jal min
+    move $s0, $v0
+    move $a0, $a2
+    move $a1, $a3
+    jal max
+    move $s1, $v0
+    
+    sub $t0, $s0, $s1
+    move $v0, $t0
+
+    lw $s0, 0($sp)
+    lw $s1, 4($sp)
+    lw $ra, 8($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+max:
+    bgt $a0, $a1, return_first
+    b return_second
+    
+min:
+    blt $a0, $a1, return_first
+    b return_second
+    
+return_first:
+    move $v0, $a0
+    jr $ra
+
+return_second:
+    move $v0, $a1
     jr $ra
