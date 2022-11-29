@@ -57,27 +57,29 @@ ADDR_KBRD:
 # Mutable Data
 ##############################################################################
 ball:
-    .word   126 	    # x_loc
-    .word   100	    # y_loc
-    .word   white   # ball_color 
-    .word   6	    # x_vel
-    .word   -3	    # y_vel
-    .word   ball_size # ball_size
+    .word   126			# x_pos
+    .word   100			# y_pos
+    .word   white		# ball_color 
+    .word   6			# x_vel
+    .word   -3			# y_vel
+    .word   ball_size		# ball_size
 paddle:
-    .word   116			# x_loc
-    .word   116			# y_loc
+    .word   116			# x_pos
+    .word   116			# y_pos
     .word   paddle_width	# paddle_width
     .word   red			# paddle_color    
     .word   paddle_speed	# paddle_speed
+
+# == interface for each brick == 
 # brick:
-    #.space  4	# x_loc   
-    #.space  4	# y_loc   
-    #.space  4	# color
-    #.word   0	# is_dead  
+    #.space  4			# x_pos   
+    #.space  4			# y_pos   
+    #.space  4			# color
+    #.word   0			# is_dead  
 
 brick_array:
-    .space  4	    # ending address
-    .space  1000    # don't know what this should be
+    .space  4			# number of bricks
+    .space  1000		# memory for array of bricks
 
     
 ##############################################################################
