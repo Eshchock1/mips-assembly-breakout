@@ -1,11 +1,11 @@
 ################ CSC258H1F Fall 2022 Assembly Final Project ##################
 # This file contains our implementation of Breakout.
 #
-# Student 1: Name, Student Number
-# Student 2: Name, Student Number
+# Student 1: Rameshwara Chock, 1008353693
+# Student 2: Edwin Chen, 1008134056
 ######################## Bitmap Display Configuration ########################
-# - Unit width in pixels:       4
-# - Unit height in pixels:      4
+# - Unit width in pixels:       2
+# - Unit height in pixels:      2
 # - Display width in pixels:    512
 # - Display height in pixels:   256
 # - Base Address for Display:   0x10008000 ($gp)
