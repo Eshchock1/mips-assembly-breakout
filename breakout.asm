@@ -1,11 +1,11 @@
 ################ CSC258H1F Fall 2022 Assembly Final Project ##################
 # This file contains our implementation of Breakout.
 #
-# Student 1: Name, Student Number
-# Student 2: Name, Student Number
+# Student 1: Rameshwara Chock, 1008353693
+# Student 2: Edwin Chen, 1008134056
 ######################## Bitmap Display Configuration ########################
-# - Unit width in pixels:       4
-# - Unit height in pixels:      4
+# - Unit width in pixels:       2
+# - Unit height in pixels:      2
 # - Display width in pixels:    512
 # - Display height in pixels:   256
 # - Base Address for Display:   0x10008000 ($gp)
@@ -60,8 +60,8 @@ ball:
     .word   126			# x_pos
     .word   100			# y_pos
     .word   white		# ball_color 
-    .word   2			# x_vel
-    .word   -2			# y_vel
+    .word   5			# x_vel
+    .word   -3			# y_vel
     .word   ball_size		# ball_size
 paddle:
     .word   116			# x_pos
@@ -312,27 +312,27 @@ init_bricks:
     mflo $t3
     sw $t3, 0($t0)
     
-    li $a0, 10 
+    li $a0, 25 
     li $a1, 0 
     li $a2, red
     jal init_brick_line
     
-    li $a0, 15 
+    li $a0, 30 
     li $a1, 1 
     li $a2, orange
     jal init_brick_line
     
-    li $a0, 20 
+    li $a0, 35 
     li $a1, 2 
     li $a2, yellow
     jal init_brick_line
     
-    li $a0, 25 
+    li $a0, 40 
     li $a1, 3 
     li $a2, green
     jal init_brick_line
     
-    li $a0, 30 
+    li $a0, 45 
     li $a1, 4 
     li $a2, blue
     jal init_brick_line
@@ -366,13 +366,20 @@ draw_brick_loop:
     li $a2, brick_width  # store rect width
     li $a3, brick_height  # store rect height
     lw $t3, 0($s0)  # load color
-    addi $s0, $s0, 8 
+    addi $s0, $s0, 4
+    lw $t0, 0($s0) # load is dead
+    addi $s0, $s0, 4
+    beq $t0, 1, skip_brick_draw 
     addi $sp, $sp, -4
     sw $t3, 0($sp)  # push color onto stack
     jal draw_rect
     addi $s2, $s2, 1  # increment i
     b draw_brick_loop 
     
+skip_brick_draw:
+   addi $s2, $s2, 1
+   b draw_brick_loop
+
 draw_brick_epi:
     # EPILOGUE
     lw $s0, 0($sp)
@@ -545,20 +552,21 @@ move_ball:
     la $s0, ball	# get ball address
     lw $t1, 0($s0)	# x
     lw $t2, 4($s0)	# y
-    lw $t3, 12($s0)	# x_velocity
-    lw $t4, 16($s0)	# y_velocty
-    add $s1, $t1, $t3	# x = x + x_velocity
-    add $s2, $t2, $t4	# y = y + y_velocity
+    lw $s3, 12($s0)	# x_velocity
+    lw $s4, 16($s0)	# y_velocty
+    add $s1, $t1, $s3	# x = x + x_velocity
+    add $s2, $t2, $s4	# y = y + y_velocity
 
     ble $t1, 7, handle_ball_left_wall_collision
     bge $t1, 246, handle_ball_right_wall_collision
     ble $t2, 7, handle_ball_top_wall_collision
+    bge $t2, 125, handle_game_reset
     
-    # (x_ball, y_ball, x_ball_vel, y_vall_vel, x_target, y_target, target_width, target_height) - collision_side, collision_reset_val
+    # handle ball and paddle collision
     move $a0, $s1
     move $a1, $s2
-    move $a2, $t3
-    move $a3, $t4
+    move $a2, $s3
+    move $a3, $s4
     la $t0, paddle
     lw $t1, 0($t0) # x loc
     lw $t2, 4($t0) # y loc
@@ -574,43 +582,153 @@ move_ball:
     beq $v0, 1, handle_vert_ball_paddle_collision
     beq $v0, 3, handle_vert_ball_paddle_collision
     
+    move $a0, $s1 # ball x pos
+    move $a1, $s2 # ball y pos
+    move $a2, $s3 # ball x vel
+    move $a3, $s4 # ball y vel
+    jal handle_ball_brick_collision
+    beq $v0, 1, move_ball_epi # branch if collision
+    
     sw $s1, 0($s0)
     sw $s2, 4($s0)
     
     b move_ball_epi
 
+# (ball_x, ball_y, ball_x_vel, ball_y_vel)
+handle_ball_brick_collision: 
+    # PROLOGUE
+    addi $sp, $sp, -32
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $s2, 8($sp)
+    sw $s3, 12($sp)
+    sw $s4, 16($sp)
+    sw $s5, 20($sp)
+    sw $s6, 24($sp)
+    sw $ra, 28($sp)
+
+    # BODY
+    la $s0, brick_array  # store brick array address
+    lw $s1, 0($s0)  # store the number of bricks in brick_array
+    li $s2, 0  # i = 0
+    addi $s0, $s0, 4  # skip first address
+    
+    move $s3, $a0
+    move $s4, $a1
+    move $s5, $a2
+    move $s6, $a3
+    
+handle_ball_brick_collision_loop:
+    beq $s1, $s2, handle_ball_brick_collision_no_collision  # exit when i == number of bricks
+    lw $t0, 0($s0)  # load the x coord
+    addi $s0, $s0, 4 
+    lw $t1, 0($s0)  # load the y value
+    addi $s0, $s0, 8
+    li $t2, brick_width  # store rect width
+    li $t3, brick_height  # store rect height
+    lw $t4, 0($s0) # load is dead  
+    beq $t4, 1, skip_brick # skip if dead
+    addi $sp, $sp, -16
+    sw $t0, 0($sp)
+    sw $t1, 4($sp)
+    sw $t2, 8($sp)
+    sw $t3, 12($sp)
+    move $a0, $s3
+    move $a1, $s4
+    move $a2, $s5
+    move $a3, $s6
+    jal handle_ball_rect_collision
+    
+    beq $v0, 1, handle_vert_ball_brick_collision
+    beq $v0, 2, handle_hori_ball_brick_collision
+    beq $v0, 3, handle_vert_ball_brick_collision
+    beq $v0, 4, handle_hori_ball_brick_collision
+    
+    addi $s0, $s0, 4
+    addi $s2, $s2, 1
+    b handle_ball_brick_collision_loop
+
+skip_brick:
+    addi $s0, $s0, 4
+    addi $s2, $s2, 1
+    b handle_ball_brick_collision_loop
+
+handle_vert_ball_brick_collision:
+    la $t0, ball
+    sub $s6, $0, $s6
+    sw $v1, 4($t0)  # store new y position
+    sw $s6, 16($t0)  # store new y vel
+    li $t1, 1
+    sw $t1, 0($s0) # mark as dead
+    li $v0, 1
+    b handle_ball_brick_collision_epi
+
+handle_hori_ball_brick_collision:
+    la $t0, ball
+    sub $s5, $0, $s5
+    sw $v1, 0($t0)  # store new x position
+    sw $s5, 12($t0)  # store new x vel
+    li $t1, 1
+    sw $t1, 0($s0) # mark as dead
+    li $v0, 1
+    b handle_ball_brick_collision_epi
+    
+handle_ball_brick_collision_no_collision:
+    li $v0, 0
+    b handle_ball_brick_collision_epi
+
+handle_ball_brick_collision_epi:
+    lw $s0, 0($sp)
+    lw $s1, 4($sp)
+    lw $s2, 8($sp)
+    lw $s3, 12($sp)
+    lw $s4, 16($sp)
+    lw $s5, 20($sp)
+    lw $s6, 24($sp)
+    lw $ra, 28($sp)
+    addi $sp, $sp, 32
+    jr $ra
+
 handle_vert_ball_paddle_collision:
-    lw $t4, 16($s0) # y vel
-    sub $t4, $0, $t4
+    sub $s4, $0, $s4
     sw $v1, 4($s0)  # store new y position
-    sw $t4, 16($s0)  # store new y vel
+    sw $s4, 16($s0)  # store new y vel
     b move_ball_epi
 
 handle_ball_left_wall_collision:
-    sub $t3, $0, $t3
+    sub $s3, $0, $s3
     li $t5, 8
     sw $t5, 0($s0)
-    sw $t3, 12($s0)
+    sw $s3, 12($s0)
     b move_ball_epi
     
 handle_ball_right_wall_collision:
-    sub $t3, $0, $t3
+    sub $s3, $0, $s3
     li $t5, 245
     sw $t5, 0($s0)
-    sw $t3, 12($s0)
+    sw $s3, 12($s0)
     b move_ball_epi
     
 handle_ball_top_wall_collision:
-    sub $t4, $0, $t4 
+    sub $s4, $0, $s4 
     li $t5, 8
     sw $t5, 4($s0)
-    sw $t4, 16($s0)
+    sw $s4, 16($s0)
+    b move_ball_epi
+
+handle_game_reset:
+    li $t0, 126
+    li $t1, 100
+    li $t2, 3
+    li $t3, -2
+    sw $t0, 0($s0)
+    sw $t1, 4($s0)
+    sw $t2, 12($s0)
+    sw $t3, 16($s0)
     b move_ball_epi
 
 move_ball_epi:
     # EPILOGUE
-<<<<<<< HEAD
-=======
     lw $s0, 0($sp)
     lw $s1, 4($sp)
     lw $s2, 8($sp)
@@ -785,5 +903,4 @@ return_first:
 
 return_second:
     move $v0, $a1
->>>>>>> a64e002b3825b98926e307aede5c85e5b8e1910a
     jr $ra
