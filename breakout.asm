@@ -31,7 +31,7 @@
 .eqv brick_gap 2
 .eqv bricks_per_line 11
 .eqv paddle_speed 8
-.eqv paddle_width 24
+.eqv paddle_width 30
 .eqv paddle_height 3  
 .eqv ball_size 3
 
@@ -112,7 +112,7 @@ game_loop:
     # Tell the display to update
     lw   $t8, ADDR_DSPL
     li   $t9, 1
-    sw   $t9, 0($t8) 
+    sb   $t9, 0($t8) 
     
     # sleep
     li $a0, sleep_time
@@ -484,6 +484,8 @@ move_paddle_left:
     jal move_paddle
     j handle_input_epi
 move_paddle_right:
+
+
     li $a0, 1
     jal move_paddle
     j handle_input_epi
@@ -638,6 +640,7 @@ handle_ball_brick_collision_loop:
     move $a2, $s5
     move $a3, $s6
     jal handle_ball_rect_collision
+
     
     beq $v0, 1, handle_vert_ball_brick_collision
     beq $v0, 2, handle_hori_ball_brick_collision
@@ -661,6 +664,7 @@ handle_vert_ball_brick_collision:
     li $t1, 1
     sw $t1, 0($s0) # mark as dead
     li $v0, 1
+    jal beep_sound3
     b handle_ball_brick_collision_epi
 
 handle_hori_ball_brick_collision:
@@ -671,6 +675,7 @@ handle_hori_ball_brick_collision:
     li $t1, 1
     sw $t1, 0($s0) # mark as dead
     li $v0, 1
+    jal beep_sound3
     b handle_ball_brick_collision_epi
     
 handle_ball_brick_collision_no_collision:
@@ -693,28 +698,36 @@ handle_vert_ball_paddle_collision:
     sub $s4, $0, $s4
     sw $v1, 4($s0)  # store new y position
     sw $s4, 16($s0)  # store new y vel
+    jal beep_sound1
     b move_ball_epi
 
 handle_ball_left_wall_collision:
+    # jal make_beep2
     sub $s3, $0, $s3
     li $t5, 8
     sw $t5, 0($s0)
     sw $s3, 12($s0)
+    jal beep_sound2
     b move_ball_epi
+
     
 handle_ball_right_wall_collision:
     sub $s3, $0, $s3
     li $t5, 245
     sw $t5, 0($s0)
     sw $s3, 12($s0)
+    jal beep_sound2
     b move_ball_epi
+
     
 handle_ball_top_wall_collision:
     sub $s4, $0, $s4 
     li $t5, 8
     sw $t5, 4($s0)
     sw $s4, 16($s0)
+    jal beep_sound2
     b move_ball_epi
+
 
 handle_game_reset:
     li $t0, 126
@@ -904,3 +917,36 @@ return_first:
 return_second:
     move $v0, $a1
     jr $ra
+
+
+beep_sound1:
+    li $a0, 65	    # pitch
+    li $a1, 150	    # duration
+    li $a2, 24 	    # instrument
+    li $a3, 127	    # volume
+    li $v0, 31
+    syscall
+
+    jr $ra
+
+beep_sound2:
+    li $a0, 80	    # pitch
+    li $a1, 150	    # duration
+    li $a2, 24 	    # instrument
+    li $a3, 127	    # volume
+    li $v0, 31
+    syscall
+
+    jr $ra
+
+beep_sound3:
+    li $a0, 45	    # pitch
+    li $a1, 150	    # duration
+    li $a2, 24 	    # instrument
+    li $a3, 127	    # volume
+    li $v0, 31
+    syscall
+
+    jr $ra
+
+
