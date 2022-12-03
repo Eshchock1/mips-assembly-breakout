@@ -81,6 +81,9 @@ brick_array:
     .space  4			# number of bricks
     .space  1000		# memory for array of bricks
 
+is_paused:
+    .word 0
+
     
 ##############################################################################
 # Code
@@ -102,6 +105,10 @@ game_loop:
 	# 4. Sleep
 
     jal handle_input
+
+    lw $t0, is_paused  
+    bne $t0, $zero, end_frame	# end the frame if the game is paused
+
     jal move_ball
 
     jal draw_bricks
@@ -120,6 +127,8 @@ game_loop:
     syscall
 
     jal erase_screen
+
+end_frame:
 
     #5. Go back to 1
     b game_loop
@@ -473,21 +482,36 @@ handle_input:
     bne $t1, 1, handle_input_epi	# If first word 1, key is pressed
 
     lw $t2, 4($t0)  # $t2 = keycode
+
+    lw $t3, is_paused 
+
+    bne $t3, $zero, handle_input_paused_mode # when is_paused only handle input to unpause
+
     beq $t2, 97, move_paddle_left	# a
     beq $t2, 100, move_paddle_right	# d
+    beq $t2, 112, handle_pause_game	# p
     beq $t2, 113, quit	# q
-    
     j handle_input_epi
+
+handle_input_paused_mode:
+    beq $t2, 117, handle_unpause_game	# u
+    j handle_input_epi
+    
 
 move_paddle_left:
     li $a0, -1
     jal move_paddle
     j handle_input_epi
 move_paddle_right:
-
-
     li $a0, 1
     jal move_paddle
+    j handle_input_epi
+handle_pause_game:
+    li $t0, 1
+    sw $t0, is_paused
+    j handle_input_epi
+handle_unpause_game:
+    sw $zero, is_paused
     j handle_input_epi
 quit:
     jal quit_game
@@ -949,4 +973,16 @@ beep_sound3:
 
     jr $ra
 
+# # toggle_pause() -> void
+# #   toggle the is_pause variable
+# toggle_pause:
+#     lw $t0, is_paused
+#     bne $t0, $zero, toggle_pause_unpause
+# toggle_pause_pause:
+#     li $t0, 1
+#     j toggle_pause_epi
+# toggle_pause_unpause:
+#     li $t0, 0
+# toggle_pause_epi:
+#     jr $ra
 
