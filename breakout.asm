@@ -34,6 +34,7 @@
 .eqv paddle_width 30
 .eqv paddle_height 3  
 .eqv ball_size 3
+.eqv seg_len 3	    # length of segments for numbers
 
 .data
 
@@ -83,7 +84,6 @@ brick_array:
 
 is_paused:
     .word 0
-
     
 ##############################################################################
 # Code
@@ -115,6 +115,8 @@ game_loop:
     jal draw_paddle
     jal draw_ball
     jal draw_walls
+
+
    
     # Tell the display to update
     lw   $t8, ADDR_DSPL
@@ -218,6 +220,10 @@ draw_walls:
     sw $ra, 0($sp)
     # BODY
 
+
+    li $a0, 10
+    li $a1, 10
+    jal draw_zero
     # corner
     # li $a0, 10 
     # li $a1, 60 
@@ -241,7 +247,7 @@ draw_walls:
     sw $t0, 0($sp)
 
     jal draw_rect
-
+    
     # top wall
     li $a0, 1
     li $a1, 1
@@ -973,16 +979,533 @@ beep_sound3:
 
     jr $ra
 
-# # toggle_pause() -> void
-# #   toggle the is_pause variable
-# toggle_pause:
-#     lw $t0, is_paused
-#     bne $t0, $zero, toggle_pause_unpause
-# toggle_pause_pause:
-#     li $t0, 1
-#     j toggle_pause_epi
-# toggle_pause_unpause:
-#     li $t0, 0
-# toggle_pause_epi:
-#     jr $ra
+# draw_num0(x, y) -> void
+#   draw a zero with left corner at (x, y)
+draw_num0:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+draw_num1:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+draw_num2:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+
+draw_num3:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+draw_num4:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+
+draw_num5:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+draw_num6:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+draw_num7:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+draw_num8:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+draw_num9:
+    # PROLOGUE
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    move $s0, $a0
+    move $s1, $a1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    # EPILOGUE
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+
+# draw_seg1(x, y) -> void
+draw_seg1:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    move $a0, $a0 
+    move $a1, $a1 
+    li $a2, seg_len 
+    addi $a2, $a2, 1
+    li $a3, 1 
+    addi $sp, $sp, -4
+    li, $t0, white
+    sw $t0, 0($sp)
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+draw_seg2:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    addi $a0, $a0, seg_len
+    move $a1, $a1 
+    li $a2, 1
+    li $a3, seg_len
+    addi $a3, $a3, 1
+    addi $sp, $sp, -4
+    li, $t0, white
+    sw $t0, 0($sp)
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+draw_seg3:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    addi $a0, $a0, seg_len
+    addi $a1, $a1, seg_len
+    li $a2, 1
+    li $a3, seg_len
+    addi $a3, $a3, 1
+    addi $sp, $sp, -4
+    li, $t0, white
+    sw $t0, 0($sp)
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+draw_seg4:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    move $a0, $a0 
+    addi $a1, $a1, seg_len 
+    addi $a1, $a1, seg_len 
+    li $a2, seg_len 
+    addi $a2, $a2, 1 
+    li $a3, 1 
+    addi $sp, $sp, -4
+    li, $t0, white
+    sw $t0, 0($sp)
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+draw_seg5:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    move $a0, $a0
+    move $a1, $a1 
+    li $a2, 1
+    li $a3, seg_len
+    addi $a3, $a3, 1
+    addi $sp, $sp, -4
+    li, $t0, white
+    sw $t0, 0($sp)
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+draw_seg6:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    move $a0, $a0
+    addi $a1, $a1, seg_len
+    li $a2, 1
+    li $a3, seg_len
+    addi $a3, $a3, 1
+    addi $sp, $sp, -4
+    li, $t0, white
+    sw $t0, 0($sp)
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+draw_seg7:
+    # PROLOGUE
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # BODY
+    move $a0, $a0 
+    addi $a1, $a1, seg_len 
+    li $a2, seg_len 
+    add $a2, $a2, 1
+    li $a3, 1 
+    addi $sp, $sp, -4
+    li, $t0, white
+    sw $t0, 0($sp)
+    jal draw_rect
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
 
