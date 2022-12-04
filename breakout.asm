@@ -84,6 +84,9 @@ brick_array:
 
 is_paused:
     .word 0
+
+score:
+    .word 000
     
 ##############################################################################
 # Code
@@ -117,6 +120,9 @@ game_loop:
     jal draw_walls
 
 
+    li $a0, 10
+    li $a1, 10
+    jal draw_score
    
     # Tell the display to update
     lw   $t8, ADDR_DSPL
@@ -221,9 +227,15 @@ draw_walls:
     # BODY
 
 
-    li $a0, 10
-    li $a1, 10
-    jal draw_num3
+
+    # li $a2, 5
+    # jal draw_num
+    #
+    # li $a0, 16
+    # li $a1, 10
+    # li $a2, 3
+    # jal draw_num
+
     # corner
     # li $a0, 10 
     # li $a1, 60 
@@ -694,6 +706,7 @@ handle_vert_ball_brick_collision:
     li $t1, 1
     sw $t1, 0($s0) # mark as dead
     li $v0, 1
+    jal increment_score
     jal beep_sound3
     b handle_ball_brick_collision_epi
 
@@ -705,6 +718,7 @@ handle_hori_ball_brick_collision:
     li $t1, 1
     sw $t1, 0($s0) # mark as dead
     li $v0, 1
+    jal increment_score
     jal beep_sound3
     b handle_ball_brick_collision_epi
     
@@ -979,381 +993,6 @@ beep_sound3:
 
     jr $ra
 
-# draw_num0(x, y) -> void
-#   draw a zero with left corner at (x, y)
-draw_num0:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg4
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg5
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg6
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-draw_num1:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-draw_num2:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg4
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg5
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-
-draw_num3:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg4
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-draw_num4:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg6
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-
-draw_num5:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg4
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg6
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-draw_num6:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg4
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg5
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg6
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-draw_num7:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-draw_num8:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg4
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg5
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg6
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
-
-draw_num9:
-    # PROLOGUE
-    addi $sp, $sp, -12
-    sw $s0, 0($sp)
-    sw $s1, 4($sp)
-    sw $ra, 8($sp)
-
-    # BODY
-    move $s0, $a0
-    move $s1, $a1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg1
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg2
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg3
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg4
-
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
-    # EPILOGUE
-    lw $ra, 8($sp)
-    lw $s1, 4($sp)
-    lw $s0, 0($sp)
-    addi $sp, $sp, 12
-    jr $ra
 
 
 # draw_seg1(x, y) -> void
@@ -1470,7 +1109,7 @@ draw_seg6:
 
     # BODY
     move $a0, $a0
-    addi $a1, $a1, seg_len
+    move $a1, $a1
     li $a2, 1
     li $a3, seg_len
     addi $a3, $a3, 1
@@ -1505,3 +1144,326 @@ draw_seg7:
     addi $sp, $sp, 4
     jr $ra
 
+
+# draw_score(x, y, num) -> void
+draw_num:
+    addi $sp, $sp, -12
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $ra, 8($sp)
+
+    # BODY
+    # copy (x, y) parameters
+    move $s0, $a0
+    move $s1, $a1
+    
+    li $t0, 0
+    beq $a2, $t0, draw_num0
+    li $t0, 1
+    beq $a2, $t0, draw_num1
+    li $t0, 2
+    beq $a2, $t0, draw_num2
+    li $t0, 3
+    beq $a2, $t0, draw_num3
+    li $t0, 4
+    beq $a2, $t0, draw_num4
+    li $t0, 5
+    beq $a2, $t0, draw_num5
+    li $t0, 6
+    beq $a2, $t0, draw_num6
+    li $t0, 7
+    beq $a2, $t0, draw_num7
+    li $t0, 8
+    beq $a2, $t0, draw_num8
+    li $t0, 9
+    beq $a2, $t0, draw_num9
+    
+    # error if ever reach this point
+draw_num0:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    j draw_num_epi
+draw_num1:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+    j draw_num_epi
+draw_num2:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+    j draw_num_epi
+draw_num3:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    j draw_num_epi
+draw_num4:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    j draw_num_epi
+draw_num5:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    j draw_num_epi
+draw_num6:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    move $a0, $s0 
+    move $a1, $s1 
+
+    j draw_num_epi
+draw_num7:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    j draw_num_epi
+
+draw_num8:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg4
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg5
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    j draw_num_epi
+
+draw_num9:
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg1
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg2
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg3
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg6
+
+    move $a0, $s0 
+    move $a1, $s1 
+    jal draw_seg7
+
+    j draw_num_epi
+draw_num_epi:
+    lw $ra, 8($sp)
+    lw $s1, 4($sp)
+    lw $s0, 0($sp)
+    addi $sp, $sp, 12
+    jr $ra
+
+# draw_score(x, y) -> void
+draw_score:
+    addi $sp, $sp, -12
+    sw $s0, 8($sp)
+    sw $s1, 4($sp)
+    sw $ra, 0($sp)
+    
+    # create copies of parameters
+    move $s0, $a0
+    move $s1, $a0
+    
+    # get hundreds digit
+    lw $t0, score
+    li $t1, 100
+    li $t2, 10
+    div $t0, $t1
+    mflo $t1
+    div $t1, $t2
+    mfhi $a2
+    # draw hundreds digit
+    move $a0, $s0
+    move $a1, $s1
+    jal draw_num
+
+    # get ten's digit
+    lw $t0, score
+    li $t1, 10
+    li $t2, 10
+    div $t0, $t1
+    mflo $t1
+    div $t1, $t2
+    mfhi $a2
+    # draw tens digit
+    addi $s0, $s0, 6
+    move $a0, $s0
+    move $a1, $s1
+    jal draw_num
+
+    # get ones's digit
+    lw $t0, score
+    li $t1, 1
+    li $t2, 10
+    div $t0, $t1
+    mflo $t1
+    div $t1, $t2
+    mfhi $a2
+    # draw ones digit
+    addi $s0, $s0, 6
+    move $a0, $s0
+    move $a1, $s1
+    jal draw_num
+
+    # EPILOGUE
+    lw $ra, 0($sp)
+    lw $s1, 4($sp)
+    lw $s0, 8($sp)
+    addi $sp, $sp, 12
+
+    jr $ra
+    
+
+increment_score:
+    lw $t0, score
+    addi $t0, $t0, 1
+    sw $t0, score
+    jr $ra
