@@ -34,7 +34,7 @@
 .eqv paddle_width 30
 .eqv paddle_height 3  
 .eqv ball_size 3
-.eqv seg_len 3	    # length of segments for numbers
+.eqv seg_len 4	    # length of segments for numbers
 
 .data
 
@@ -505,6 +505,10 @@ handle_input:
 
     bne $t3, $zero, handle_input_paused_mode # when is_paused only handle input to unpause
 
+    move $a0, $t2
+    li $v0, 1
+    syscall
+
     beq $t2, 97, move_paddle_left	# a
     beq $t2, 100, move_paddle_right	# d
     beq $t2, 112, handle_pause_game	# p
@@ -575,9 +579,6 @@ handle_paddle_right_collision:
     b move_paddle_epi
     
 move_paddle_epi:
-    move $a0, $t1
-    li $v0, 1
-    syscall
 
     # EPILOGUE
     jr $ra
@@ -1434,7 +1435,8 @@ draw_score:
     div $t1, $t2
     mfhi $a2
     # draw tens digit
-    addi $s0, $s0, 6
+    addi $s0, $s0, seg_len 
+    addi $s0, $s0, 3 # padding
     move $a0, $s0
     move $a1, $s1
     jal draw_num
@@ -1448,7 +1450,8 @@ draw_score:
     div $t1, $t2
     mfhi $a2
     # draw ones digit
-    addi $s0, $s0, 6
+    addi $s0, $s0, seg_len 
+    addi $s0, $s0, 3 # padding
     move $a0, $s0
     move $a1, $s1
     jal draw_num
