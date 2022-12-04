@@ -223,7 +223,7 @@ draw_walls:
 
     li $a0, 10
     li $a1, 10
-    jal draw_zero
+    jal draw_num3
     # corner
     # li $a0, 10 
     # li $a1, 60 
@@ -1016,10 +1016,6 @@ draw_num0:
     move $a1, $s1 
     jal draw_seg6
 
-    move $a0, $s0 
-    move $a1, $s1 
-    jal draw_seg7
-
     # EPILOGUE
     lw $ra, 8($sp)
     lw $s1, 4($sp)
@@ -1453,7 +1449,7 @@ draw_seg5:
 
     # BODY
     move $a0, $a0
-    move $a1, $a1 
+    addi $a1, $a1, seg_len
     li $a2, 1
     li $a3, seg_len
     addi $a3, $a3, 1
