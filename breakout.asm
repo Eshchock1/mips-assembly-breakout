@@ -856,36 +856,36 @@ handle_ball_paddle_collision:
     b set_ball_speed_neg_3		# make the ball bounce sharp left
 # make the ball bounce sharp right
 set_ball_speed_3:
-   li $t4, 4
-   li $t5, -4
+   li $t4, 5
+   li $t5, -3
    sw $t4, 12($t3)
    sw $t5, 16($t3)
    b handle_ball_paddle_collision_epi
 # make the ball bounce right
 set_ball_speed_2:
    li $t4, 3
-   li $t5, -4
+   li $t5, -3
    sw $t4, 12($t3)
    sw $t5, 16($t3)
    b handle_ball_paddle_collision_epi
 # make the ball bounce a bit right
 set_ball_speed_1:
    li $t4, 2
-   li $t5, -3
+   li $t5, -2
    sw $t4, 12($t3)
    sw $t5, 16($t3)
    b handle_ball_paddle_collision_epi
 # make the ball bounce straight up
 set_ball_speed_0:
    li $t4, 0
-   li $t5, -3
+   li $t5, -2
    sw $t4, 12($t3)
    sw $t5, 16($t3)
    b handle_ball_paddle_collision_epi
 # make the ball bounce a bit left
 set_ball_speed_neg_1:
    li $t4, -2
-   li $t5, -3
+   li $t5, -2
    sw $t4, 12($t3)
    sw $t5, 16($t3)
    b handle_ball_paddle_collision_epi
@@ -898,8 +898,8 @@ set_ball_speed_neg_2:
    b handle_ball_paddle_collision_epi
 # make the ball bounce sharp left
 set_ball_speed_neg_3:
-   li $t4, -4
-   li $t5, -4
+   li $t4, -3
+   li $t5, -5
    sw $t4, 12($t3)
    sw $t5, 16($t3)
    b handle_ball_paddle_collision_epi
