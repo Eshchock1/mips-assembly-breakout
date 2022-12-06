@@ -64,7 +64,7 @@ ball:
     .word   100			# y_pos
     .word   white		# ball_color 
     .word   0			# x_vel
-    .word   -3			# y_vel
+    .word   0			# y_vel
     .word   ball_size		# ball_size
 paddle:
     .word   112			# x_pos
@@ -425,7 +425,7 @@ init_ball:
     li $t1, 126
     li $t2, 100
     li $t3, 0
-    li $t4, -3
+    li $t4, 0
     sw $t1, 0($t0)
     sw $t2, 4($t0)
     sw $t3, 12($t0)
@@ -587,6 +587,7 @@ handle_input:
     beq $t2, 97, move_paddle_left	# a
     beq $t2, 100, move_paddle_right	# d
     beq $t2, 112, handle_pause_game	# p
+    beq $t2, 32, handle_launch_ball   	# spac
     beq $t2, 113, quit	# q
     j handle_input_epi
 
@@ -609,6 +610,15 @@ handle_pause_game:
     j handle_input_epi
 handle_unpause_game:
     sw $zero, is_paused
+    j handle_input_epi
+handle_launch_ball:
+    la $t0, ball
+    lw $t1, 16($t0)
+    beq $t1, 0, launch_ball
+    j handle_input_epi     
+launch_ball:
+    li $t2, -3
+    sw $t2, 16($t0)
     j handle_input_epi
 quit:
     jal quit_game
