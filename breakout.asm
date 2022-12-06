@@ -63,11 +63,11 @@ ball:
     .word   126			# x_pos
     .word   100			# y_pos
     .word   white		# ball_color 
-    .word   5			# x_vel
+    .word   0			# x_vel
     .word   -3			# y_vel
     .word   ball_size		# ball_size
 paddle:
-    .word   116			# x_pos
+    .word   112			# x_pos
     .word   116			# y_pos
     .word   paddle_width	# paddle_width
     .word   red			# paddle_color    
@@ -151,8 +151,6 @@ end_frame:
 end:    
     li $v0, 10
     syscall
-    
-reset_game:
 
 
 # get_location_address(x, y) -> address
@@ -416,17 +414,18 @@ init_bricks:
     
 init_paddle:
     la $t0, paddle
-    li $t1, 116
+    li $t1, 112
+    li $t2, 116
     sw $t1, 0($t0)
-    sw $t1, 4($t0)
+    sw $t2, 4($t0)
     jr $ra
     
 init_ball:
     la $t0, ball
     li $t1, 126
     li $t2, 100
-    li $t3, 3
-    li $t4, -2
+    li $t3, 0
+    li $t4, -3
     sw $t1, 0($t0)
     sw $t2, 4($t0)
     sw $t3, 12($t0)
@@ -825,9 +824,72 @@ handle_ball_brick_collision_epi:
     jr $ra
 
 handle_vert_ball_paddle_collision:
-    sub $s4, $0, $s4
     sw $v1, 4($s0)  # store new y position
-    sw $s4, 16($s0)  # store new y vel
+
+    la $t3, ball
+    lw $t0, 0($t3)
+    la $t1, paddle
+    lw $t1, 0($t1)
+    sub $t2, $t0, $t1
+    addi $t2, $t2, 2 #distance of ball from 2 pixels before left edge of paddle (in 0, 31)    
+    bge $t2, 27, set_ball_speed_3
+    bge $t2, 22, set_ball_speed_2
+    bge $t2, 18, set_ball_speed_1
+    bge $t2, 14, set_ball_speed_0
+    bge $t2, 10, set_ball_speed_neg_1
+    bge $t2, 5, set_ball_speed_neg_2
+    b set_ball_speed_neg_3
+
+set_ball_speed_3:
+   li $t4, 4
+   li $t5, -4
+   sw $t4, 12($t3)
+   sw $t5, 16($t3)
+   b handle_ball_paddle_collision_epi
+
+set_ball_speed_2:
+   li $t4, 3
+   li $t5, -4
+   sw $t4, 12($t3)
+   sw $t5, 16($t3)
+   b handle_ball_paddle_collision_epi
+   
+set_ball_speed_1:
+   li $t4, 2
+   li $t5, -3
+   sw $t4, 12($t3)
+   sw $t5, 16($t3)
+   b handle_ball_paddle_collision_epi
+   
+set_ball_speed_0:
+   li $t4, 0
+   li $t5, -3
+   sw $t4, 12($t3)
+   sw $t5, 16($t3)
+   b handle_ball_paddle_collision_epi
+   
+set_ball_speed_neg_1:
+   li $t4, -2
+   li $t5, -3
+   sw $t4, 12($t3)
+   sw $t5, 16($t3)
+   b handle_ball_paddle_collision_epi
+   
+set_ball_speed_neg_2:
+   li $t4, -3
+   li $t5, -4
+   sw $t4, 12($t3)
+   sw $t5, 16($t3)
+   b handle_ball_paddle_collision_epi
+   
+set_ball_speed_neg_3:
+   li $t4, -4
+   li $t5, -4
+   sw $t4, 12($t3)
+   sw $t5, 16($t3)
+   b handle_ball_paddle_collision_epi
+   
+handle_ball_paddle_collision_epi:
     jal beep_sound1
     b move_ball_epi
 
