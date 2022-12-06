@@ -14,8 +14,8 @@
 
 .eqv screen_width 256	# width in bitmap units
 .eqv screen_height 128	# height in bitmap units
-.eqv sleep_time 15	# set frame rate to ~60 FPS
-# .eqv paddle_color
+.eqv sleep_time 7	# set frame rate to ~60 FPS
+
 .eqv red	0xf05630
 .eqv green  	0x73ff73
 .eqv blue   	0x525afa
@@ -587,7 +587,7 @@ handle_input:
     beq $t2, 97, move_paddle_left	# a
     beq $t2, 100, move_paddle_right	# d
     beq $t2, 112, handle_pause_game	# p
-    beq $t2, 32, handle_launch_ball   	# spac
+    beq $t2, 32, handle_launch_ball   	# space
     beq $t2, 113, quit	# q
     j handle_input_epi
 
@@ -630,6 +630,14 @@ handle_input_epi:
     jr $ra
     
 quit_game:
+    li $a0, 0
+    li $a1, 0
+    li $a2, 256
+    li $a2, 256
+    addi $sp, $sp, -4
+    li $t0, black
+    sw $t0, 0($sp) 
+    jal draw_rect
     li $v0, 10                      # Quit gracefully
     syscall
 
@@ -709,8 +717,7 @@ move_ball:
     sw $t4, 12($sp)
     jal handle_ball_rect_collision
     
-    beq $v0, 1, handle_vert_ball_paddle_collision
-    beq $v0, 3, handle_vert_ball_paddle_collision
+    bne $v0, 0, handle_vert_ball_paddle_collision
     
     move $a0, $s1 # ball x pos
     move $a1, $s2 # ball y pos
