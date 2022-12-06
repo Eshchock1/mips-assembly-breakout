@@ -57,7 +57,7 @@ ADDR_KBRD:
 ##############################################################################
 # Mutable Data
 ##############################################################################
-player:
+lives:
     .word   3  #lives
 ball:
     .word   126			# x_pos
@@ -103,7 +103,7 @@ main:
     jal init_paddle
     jal init_ball
     jal init_score
-    jal init_player
+    jal init_lives
 
 game_loop:
     # 1a. Check if key has been pressed
@@ -124,6 +124,7 @@ game_loop:
     jal draw_paddle
     jal draw_ball
     jal draw_walls
+    jal draw_lives
 
 
     li $a0, 10
@@ -228,6 +229,41 @@ draw_rect_epi:
     lw $s0, 20($sp)
     addi $sp, $sp, 24
     jr $ra
+
+draw_lives:
+   addi $sp, $sp, -16
+   sw $s0, 0($sp)
+   sw $s1, 4($sp)
+   sw $s2, 8($sp)
+   sw $ra, 12($sp)
+   
+   la $t0, lives
+   lw $s0, 0($t0)
+   li $s1, 0
+   li $s2, 240
+
+draw_lives_loop:
+   beq $s1, $s0, draw_lives_epi
+    move $a0, $s2
+    li $a1, 13
+    li $a2, 5
+    li $a3, 5 
+    li, $t0, red
+    addi $sp, $sp, -4
+    sw $t0, 0($sp)
+    jal draw_rect
+    subi $s2, $s2, 8
+   addi $s1, $s1, 1
+   b draw_lives_loop
+
+draw_lives_epi:
+   lw $s0, 0($sp)
+   lw $s1, 4($sp)
+   lw $s2, 8($sp)
+   lw $ra, 12($sp)
+   addi $sp, $sp, 16
+   jr $ra
+
 
 draw_walls:
     # PROLOGUE
@@ -402,9 +438,9 @@ init_score:
     sw $0, 0($t0)
     jr $ra
     
-init_player:
+init_lives:
     # Initialize the game
-    la $t0, player
+    la $t0, lives
     li $t1, 3
     sw $t1, 0($t0) # lives
     jr $ra
@@ -680,7 +716,7 @@ move_ball:
     b move_ball_epi
 
 handle_death:
-    la $t0, player
+    la $t0, lives
     lw $t1, 0($t0)
     subi $t1, $t1, 1
     beq $t1, 0, main
