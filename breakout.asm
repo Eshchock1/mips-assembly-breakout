@@ -24,7 +24,7 @@
 .eqv white  	0xffffff
 .eqv grey   	0x8e8e8e 
 .eqv black	0x000000
-.eqv red2	0xde3e6b
+.eqv red2	0xf55164
 
 .eqv wall_thickness 6
 .eqv brick_width 20
