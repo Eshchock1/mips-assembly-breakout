@@ -636,6 +636,17 @@ move_paddle:
     ble $t1, 7, handle_paddle_left_collision
     bge $t1, 220, handle_paddle_right_collision
     
+    la $t4, ball
+    lw $t5, 16($t4)	# ball_y_vel
+    beq $t5, 0, move_ball_to_match_paddle
+    
+    sw $t1, 0($t0)	# update x position of paddle
+    b move_paddle_epi
+# When in launch mode, move both the paddle and the ball
+move_ball_to_match_paddle:
+    lw $t5, 0($t4)
+    add $t5, $t5, $t3
+    sw $t5, 0($t4)
     sw $t1, 0($t0)	# update x position of paddle
     b move_paddle_epi
 # Handles the collisions with paddle and left wall
@@ -718,6 +729,7 @@ handle_death:
     beq $t1, 0, main
     sw $t1, 0($t0) # store new lives
     jal init_ball
+    jal init_paddle
     b move_ball_epi
 
 # handle_ball_brick_collision(ball_x, ball_y, ball_x_vel, ball_y_vel) -> (collsion_side, new_ball_pos)
