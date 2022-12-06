@@ -24,6 +24,7 @@
 .eqv white  	0xffffff
 .eqv grey   	0x8e8e8e 
 .eqv black	0x000000
+.eqv red2	0xf55164
 
 .eqv wall_thickness 6
 .eqv brick_width 20
@@ -235,7 +236,7 @@ draw_lives_loop:
    li $a1, 13
    li $a2, 5
    li $a3, 5 
-   li, $t0, red
+   li, $t0, red2
    addi $sp, $sp, -4
    sw $t0, 0($sp)
    jal draw_rect	# Draw a heart
