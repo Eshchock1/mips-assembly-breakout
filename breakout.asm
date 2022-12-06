@@ -14,7 +14,7 @@
 
 .eqv screen_width 256	# width in bitmap units
 .eqv screen_height 128	# height in bitmap units
-.eqv sleep_time 7	# set frame rate to ~60 FPS
+.eqv sleep_time 15	# set frame rate to ~60 FPS
 
 .eqv red	0xf05630
 .eqv green  	0x73ff73
