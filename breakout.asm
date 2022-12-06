@@ -57,6 +57,8 @@ ADDR_KBRD:
 ##############################################################################
 # Mutable Data
 ##############################################################################
+player:
+    .word   3  #lives
 ball:
     .word   126			# x_pos
     .word   100			# y_pos
@@ -94,10 +96,14 @@ score:
 	.text
 	.globl main
 
-	# Run the Brick Breaker game.
+	# Run the Brick Breaker game
+
 main:
-    # Initialize the game
     jal init_bricks
+    jal init_paddle
+    jal init_ball
+    jal init_score
+    jal init_player
 
 game_loop:
     # 1a. Check if key has been pressed
@@ -144,6 +150,9 @@ end_frame:
 end:    
     li $v0, 10
     syscall
+    
+reset_game:
+
 
 # get_location_address(x, y) -> address
 #   Return the address of the unit on the display at location (x,y)
@@ -369,6 +378,37 @@ init_bricks:
     addi $sp, $sp, 4
     jr $ra
     
+init_paddle:
+    la $t0, paddle
+    li $t1, 116
+    sw $t1, 0($t0)
+    sw $t1, 4($t0)
+    jr $ra
+    
+init_ball:
+    la $t0, ball
+    li $t1, 126
+    li $t2, 100
+    li $t3, 3
+    li $t4, -2
+    sw $t1, 0($t0)
+    sw $t2, 4($t0)
+    sw $t3, 12($t0)
+    sw $t4, 16($t0)
+    jr $ra
+
+init_score:
+    la $t0, score
+    sw $0, 0($t0)
+    jr $ra
+    
+init_player:
+    # Initialize the game
+    la $t0, player
+    li $t1, 3
+    sw $t1, 0($t0) # lives
+    jr $ra
+
 draw_bricks:
     # PROLOGUE
     addi $sp, $sp, -16
@@ -605,7 +645,7 @@ move_ball:
     ble $t1, 7, handle_ball_left_wall_collision
     bge $t1, 246, handle_ball_right_wall_collision
     ble $t2, 7, handle_ball_top_wall_collision
-    bge $t2, 125, handle_game_reset
+    bge $t2, 125, handle_death
     
     # handle ball and paddle collision
     move $a0, $s1
@@ -637,6 +677,15 @@ move_ball:
     sw $s1, 0($s0)
     sw $s2, 4($s0)
     
+    b move_ball_epi
+
+handle_death:
+    la $t0, player
+    lw $t1, 0($t0)
+    subi $t1, $t1, 1
+    beq $t1, 0, main
+    sw $t1, 0($t0) # store new lives
+    jal init_ball
     b move_ball_epi
 
 # (ball_x, ball_y, ball_x_vel, ball_y_vel)
@@ -773,18 +822,6 @@ handle_ball_top_wall_collision:
     jal beep_sound2
     b move_ball_epi
 
-
-handle_game_reset:
-    li $t0, 126
-    li $t1, 100
-    li $t2, 3
-    li $t3, -2
-    sw $t0, 0($s0)
-    sw $t1, 4($s0)
-    sw $t2, 12($s0)
-    sw $t3, 16($s0)
-    b move_ball_epi
-
 move_ball_epi:
     # EPILOGUE
     lw $s0, 0($sp)
@@ -892,24 +929,6 @@ handle_right_collision:
     addi $t0, $s2, 1
     move $v1, $t0
     b handle_collision_epi
-
-#handle_ball_paddle_y_collision:
- #   sub $t4, $0, $t4 
-  #  li $t5, 115
-   # sw $t1, 0($s0)
-   # sw $t5, 4($s0)
-   # sw $t4, 16($s0)
-   # li $v0, 1
-   # b move_ball_epi
-    
-#handle_ball_paddle_x_collision:
- #   sub $t3, $0, $t3
-  #  li $t5, 115
-  #  sw $t1, 0($s0)
-  #  sw $t5, 4($s0)
-  #  sw $t3, 12($s0)
-  #  li $v0, 1
-  #  b move_ball_epi
 
 handle_collision_epi:
     lw $s0, 32($sp)
